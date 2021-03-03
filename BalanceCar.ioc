@@ -95,6 +95,7 @@ PA15.Signal=GPIO_Output
 PB5.GPIO_Label=AIN1
 RCC.APB1TimFreq_Value=72000000
 NVIC.BusFault_IRQn=true\:0\:0\:false\:false\:true\:false\:false
+NVIC.USART1_IRQn=true\:0\:0\:false\:false\:true\:true\:true
 ProjectManager.CustomerFirmwarePackage=
 PB4.Signal=GPIO_Output
 PB3.Locked=true

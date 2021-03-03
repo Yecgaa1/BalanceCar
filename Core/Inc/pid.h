@@ -6,7 +6,9 @@
 #define BALANCECAR_PID_H
 
 #include <stdio.h>
-
+#include <bluetooth.h>
+#include <sensor.h>
+float Movement;
 struct pid{
     float Bias;//角度差
     float balance;//角度PWM
@@ -22,6 +24,7 @@ struct pid{
     float umax;
     float umin;
     float Mechanical_balance;//机械中值
+    u_int8_t flag_UltrasonicWave;
 }pid;
 
 
@@ -58,11 +61,33 @@ float Angle_PID(float Now_Angle,float Gyro)
     return pid.balance;
 }
 
-float Speed_PID(float  encoder_left,float  encoder_right,int goal_speed)
+float Speed_PID(float encoder_left,float encoder_right)
 {
+    if(1==Flag_Forward)
+    {
+        pid.flag_UltrasonicWave=0;//无论前面是否有障碍物,蓝牙遥控优先级最高。将标志位置0
+        Movement=20;
+    }
+    else if(1==Flag_Back)//接收到蓝牙APP遥控数据
+    {
+        pid.flag_UltrasonicWave=0;//无论前面是否有障碍物,蓝牙遥控优先级最高。将标志位置0
+        Movement=-20;//设定速度
+    }
+        /*当超声波的距离低于10cm时,即10cm处存在障碍物,将超声波标志位置并且赋积分值使其后退,这里做了个简单的P比例计算*/
+    else if(sensor.UltrasonicWave_Distance<10)
+    {
+        pid.flag_UltrasonicWave=1;
+        Movement=sensor.UltrasonicWave_Distance*(-2);
+    }
+    else//没有接受到任何的数据
+    {
+        pid.flag_UltrasonicWave=0;
+        Movement=0;
+    }
+    pid.integral+=Movement;
     pid.ActualSpeed=(encoder_left+encoder_right)/2;
     int index;
-    pid.SetSpeed=goal_speed;
+    pid.SetSpeed=0;
     pid.Speed_err=pid.SetSpeed-pid.ActualSpeed;
     if(pid.ActualSpeed>pid.umax)  //灰色底色表示抗积分饱和的实现
     {

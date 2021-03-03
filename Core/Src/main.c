@@ -18,6 +18,7 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
+#include <string.h>
 #include "main.h"
 #include "i2c.h"
 #include "tim.h"
@@ -27,8 +28,10 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-
 #include "control.h"
+#include <stdio.h>
+extern UART_HandleTypeDef huart1;
+#include "MPU6050/mpu6050.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,9 +49,9 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-
 /* USER CODE BEGIN PV */
-
+uint8_t aRxBuffer;            //接收中断缓冲
+uint8_t Uart1_Rx_Cnt = 0;        //接收缓冲计数
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -59,7 +62,17 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+#ifdef __GNUC__
 
+#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
+
+PUTCHAR_PROTOTYPE
+{
+    //注意下面第一个参数是&husart1，因为cubemx配置了串口1自动生成的
+    HAL_UART_Transmit(&huart1 ,(uint8_t*)&ch, 1, HAL_MAX_DELAY);
+    return ch;
+}
+#endif
 /* USER CODE END 0 */
 
 /**
@@ -98,8 +111,11 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
+    MPU6050_initialize();
+    DMP_Init();
     HAL_TIM_PWM_Start(&htim4,TIM_CHANNEL_3);
     TIM4->CCR3 =499;
+    HAL_UART_Receive_IT(&huart1, (uint8_t *)&aRxBuffer, 1);//启动一次 接 收 中断！
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -107,7 +123,9 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
+      mpu6050_Get();
+      HAL_Delay(10);
+      printf("%f\r\n",sensor.gyroy);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -152,7 +170,36 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+    /* Prevent unused argument(s) compilation warning */
+    UNUSED(huart);
+    /* NOTE: This function Should not be modified, when the callback is needed,
+             the HAL_UART_TxCpltCallback could be implemented in the user file
+     */
 
+    if (Uart1_Rx_Cnt >= 255)  //溢出判断
+    {
+        Uart1_Rx_Cnt = 0;
+        memset(RxBuffer, 0x00, sizeof(RxBuffer));
+        HAL_UART_Transmit(&huart1, (uint8_t *) "数据溢出", 10, 0xFFFF);
+
+    } else {
+        RxBuffer[Uart1_Rx_Cnt++] = aRxBuffer;   //接收数据转存
+
+        if (RxBuffer[Uart1_Rx_Cnt - 1] == '#') //判断结束位，数据长度-1获取数据结尾确保数据完整性
+        {
+            //HAL_UART_Transmit(&huart1, (uint8_t *) &RxBuffer, Uart1_Rx_Cnt, 0xFFFF); //将收到的信息发送出去
+            //while (HAL_UART_GetState(&huart1) == HAL_UART_STATE_BUSY_TX);//检测UART发送结束
+
+            //你的逻辑
+            bluetooth();
+            Uart1_Rx_Cnt = 0;//清空计数
+            memset(RxBuffer, 0x00, sizeof(RxBuffer)); //清空数组
+        }
+    }
+
+    HAL_UART_Receive_IT(&huart1, (uint8_t *) &aRxBuffer, 1);   //再开启接收中断
+}
 /* USER CODE END 4 */
 
 /**
