@@ -70,7 +70,7 @@ void SystemClock_Config(void);
 
 PUTCHAR_PROTOTYPE
 {
-    //注意下面第一个参数是&husart1，因为cubemx配置了串�??????1自动生成�??????
+    //注意下面第一个参数是&husart1，因为cubemx配置了串�??????1自动生成�??????
     HAL_UART_Transmit(&huart1 ,(uint8_t*)&ch, 1, HAL_MAX_DELAY);
     return ch;
 }
@@ -121,7 +121,7 @@ int main(void)
     HAL_UART_Receive_IT(&huart1, (uint8_t *)&aRxBuffer, 1);//启动串口中断
     HAL_TIM_Base_Start_IT(&htim4);//control函数,72M/500/7200=50ms
     HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
-    HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);//发动编码�?
+    HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);//发动编码�?
 
   /* USER CODE END 2 */
 
@@ -191,10 +191,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
     } else {
         RxBuffer[Uart1_Rx_Cnt++] = aRxBuffer;   //接收数据转存
 
-        if (RxBuffer[Uart1_Rx_Cnt - 1] == '#') //判断结束位，数据长度-1获取数据结尾确保数据完整�??????
+        if (RxBuffer[Uart1_Rx_Cnt - 1] == '#') //判断结束位，数据长度-1获取数据结尾确保数据完整�??????
         {
-            //HAL_UART_Transmit(&huart1, (uint8_t *) &RxBuffer, Uart1_Rx_Cnt, 0xFFFF); //将收到的信息发�?�出�??????
-            //while (HAL_UART_GetState(&huart1) == HAL_UART_STATE_BUSY_TX);//�??????测UART发�?�结�??????
+            //HAL_UART_Transmit(&huart1, (uint8_t *) &RxBuffer, Uart1_Rx_Cnt, 0xFFFF); //将收到的信息发�?�出�??????
+            //while (HAL_UART_GetState(&huart1) == HAL_UART_STATE_BUSY_TX);//�??????测UART发�?�结�??????
 
             //你的逻辑
             bluetooth();
@@ -203,7 +203,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
         }
     }
 
-    HAL_UART_Receive_IT(&huart1, (uint8_t *) &aRxBuffer, 1);   //再开启接收中�??????
+    HAL_UART_Receive_IT(&huart1, (uint8_t *) &aRxBuffer, 1);   //再开启接收中�??????
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
@@ -211,7 +211,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     static unsigned char ledState = 0;
     if (htim == (&htim4))
     {
-        time_count++;//精确测算速度
+        //time_count++;//精确测算速度
 
         control();
     }

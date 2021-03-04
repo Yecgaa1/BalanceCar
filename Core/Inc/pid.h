@@ -28,7 +28,8 @@ struct pid{
 }pid;
 
 
-void PID_init(float Mechanical_balance){
+void PID_init(float Mechanical_balance)//TODO:写初始化和机械中值
+{
     printf("PID_init begin \n");
     pid.Bias=0.0;
     pid.balance=0.0;
