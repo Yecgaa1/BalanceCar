@@ -70,8 +70,6 @@ void Error_Handler(void);
 #define HYRUN_GPIO_Port GPIOB
 #define PWMA_Pin GPIO_PIN_8
 #define PWMA_GPIO_Port GPIOA
-#define HYIN_Pin GPIO_PIN_11
-#define HYIN_GPIO_Port GPIOA
 #define HYOUT_Pin GPIO_PIN_12
 #define HYOUT_GPIO_Port GPIOA
 #define BIN2_Pin GPIO_PIN_15

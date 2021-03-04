@@ -49,6 +49,9 @@ void Set_Pwm()
     else{
         Moto2_backward();
     }
+
+    TIM1->CCR1=Moto1;
+    TIM4->CCR3=Moto2;//赋值
 }
 float myabs(float a)//取正数
 {
@@ -90,7 +93,13 @@ float turn(int encoder_left,int encoder_right,float gyro)//转向控制
 }
 void control()
 {
-
+    if(i==4)//每250ms更新一次传感器数据
+    {
+        i=0;
+        mpu6050_Get();
+        Encoder_Get();
+    }
+    else i++;
     Balance_Pwm =Angle_PID(sensor.pitch,sensor.gyroy);   //===平衡环PID控制
     Velocity_Pwm=Speed_PID(sensor.Encoder_Left,sensor.Encoder_Right);       //===速度环PID控制
     if(1==Flag_Left||1==Flag_Right)

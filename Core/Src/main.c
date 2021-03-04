@@ -18,7 +18,6 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include <string.h>
 #include "main.h"
 #include "i2c.h"
 #include "tim.h"
@@ -30,6 +29,8 @@
 
 #include "control.h"
 #include <stdio.h>
+#include <string.h>
+
 extern UART_HandleTypeDef huart1;
 #include "MPU6050/mpu6050.h"
 /* USER CODE END Includes */
@@ -49,6 +50,7 @@ extern UART_HandleTypeDef huart1;
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+
 /* USER CODE BEGIN PV */
 uint8_t aRxBuffer;            //接收中断缓冲
 uint8_t Uart1_Rx_Cnt = 0;        //接收缓冲计数
@@ -68,7 +70,7 @@ void SystemClock_Config(void);
 
 PUTCHAR_PROTOTYPE
 {
-    //注意下面第一个参数是&husart1，因为cubemx配置了串口1自动生成的
+    //注意下面第一个参数是&husart1，因为cubemx配置了串�??????1自动生成�??????
     HAL_UART_Transmit(&huart1 ,(uint8_t*)&ch, 1, HAL_MAX_DELAY);
     return ch;
 }
@@ -113,9 +115,14 @@ int main(void)
   /* USER CODE BEGIN 2 */
     MPU6050_initialize();
     DMP_Init();
-    HAL_TIM_PWM_Start(&htim4,TIM_CHANNEL_3);
-    TIM4->CCR3 =499;
-    HAL_UART_Receive_IT(&huart1, (uint8_t *)&aRxBuffer, 1);//启动一次 接 收 中断！
+    HAL_TIM_PWM_Start(&htim4,TIM_CHANNEL_3);//right
+    HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_1);//left
+    //TIM4->CCR3 =499;
+    HAL_UART_Receive_IT(&huart1, (uint8_t *)&aRxBuffer, 1);//启动串口中断
+    HAL_TIM_Base_Start_IT(&htim4);//control函数,72M/500/7200=50ms
+    HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
+    HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);//发动编码�?
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -123,9 +130,7 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-      mpu6050_Get();
-      HAL_Delay(10);
-      printf("%f\r\n",sensor.gyroy);
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -186,10 +191,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
     } else {
         RxBuffer[Uart1_Rx_Cnt++] = aRxBuffer;   //接收数据转存
 
-        if (RxBuffer[Uart1_Rx_Cnt - 1] == '#') //判断结束位，数据长度-1获取数据结尾确保数据完整性
+        if (RxBuffer[Uart1_Rx_Cnt - 1] == '#') //判断结束位，数据长度-1获取数据结尾确保数据完整�??????
         {
-            //HAL_UART_Transmit(&huart1, (uint8_t *) &RxBuffer, Uart1_Rx_Cnt, 0xFFFF); //将收到的信息发送出去
-            //while (HAL_UART_GetState(&huart1) == HAL_UART_STATE_BUSY_TX);//检测UART发送结束
+            //HAL_UART_Transmit(&huart1, (uint8_t *) &RxBuffer, Uart1_Rx_Cnt, 0xFFFF); //将收到的信息发�?�出�??????
+            //while (HAL_UART_GetState(&huart1) == HAL_UART_STATE_BUSY_TX);//�??????测UART发�?�结�??????
 
             //你的逻辑
             bluetooth();
@@ -198,7 +203,18 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
         }
     }
 
-    HAL_UART_Receive_IT(&huart1, (uint8_t *) &aRxBuffer, 1);   //再开启接收中断
+    HAL_UART_Receive_IT(&huart1, (uint8_t *) &aRxBuffer, 1);   //再开启接收中�??????
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+    static unsigned char ledState = 0;
+    if (htim == (&htim4))
+    {
+        time_count++;//精确测算速度
+
+        control();
+    }
 }
 /* USER CODE END 4 */
 
